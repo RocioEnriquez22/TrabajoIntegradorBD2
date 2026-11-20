@@ -1,14 +1,14 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox, ttk
+
 import psycopg2
 
 DB_CONFIG = {
-    "dbname": "northwind_2", #nuestra bd
+    "dbname": "northwind", #nuestra bd
     "user": "postgres",
-    "password": "postgres",  # ponemos nuestra contraseña si tenemos
+    "password": "1234",  # ponemos nuestra contraseña si tenemos
     "host": "127.0.0.1",
     "port": "5432",
-    "client_encoding": "utf8"
 }
 
 def obtener_conexion():
@@ -19,7 +19,7 @@ class AppNorthwindProductos:
     def __init__(self, root):
         self.root = root
         self.root.title("Northwind - Gestión de Productos (ABM)")
-        self.root.geometry("1080x630")
+        self.root.geometry("1280x720")
         self.root.configure(bg="#bfbfbf")
 
         self.construir_interfaz()
@@ -107,19 +107,20 @@ class AppNorthwindProductos:
         frame_tabla = tk.Frame(main_area, bg="white", bd=1, relief="solid")
         frame_tabla.pack(fill="both", expand=True)
 
-        columnas = ("id", "nombre", "proveedor", "categoria", "unidad", "precio", "stock", "orden", "reorden", "estado")
-        self.tree = ttk.Treeview(frame_tabla, columns=columnas, show="headings", selectmode="browse")
+        columnas = ("id", "nombre", "proveedor", "categoria", "unidad", "precio", "stock", "orden", "reorden", "estado", "id_proveedor", "id_categoria")
+        columnas_visibles= ("id", "nombre", "proveedor", "categoria", "unidad", "precio", "stock", "orden", "reorden", "estado")
+        self.tree = ttk.Treeview(frame_tabla, columns=columnas, show="headings", selectmode="browse", displaycolumns=columnas_visibles)
 
         encabezados = {
             "id": ("ID", 50),
             "nombre": ("Producto", 210),
-            "proveedor": ("ID Prov.", 65),
-            "categoria": ("ID Cat.", 65),
+            "proveedor": ("ID Proveedor", 65),
+            "categoria": ("ID Categoria", 65),
             "unidad": ("Presentación", 135),
             "precio": ("Precio ($)", 80),
             "stock": ("Stock", 60),
-            "orden": ("En Orden", 65),
-            "reorden": ("Reorden", 65),
+            "orden": ("Unidades encargadas", 65),
+            "reorden": ("Reabastecimiento", 65),
             "estado": ("Estado", 95)
         }
 
@@ -149,20 +150,14 @@ class AppNorthwindProductos:
         try:
             con = obtener_conexion()
             cur = con.cursor()
-            cur.execute("""
-                SELECT productid, productname, supplierid, categoryid, quantityperunit,
-                       unitprice, unitsinstock, unitsonorder, reorderlevel, discontinued
-                FROM products
-                WHERE productname ILIKE %s
-                ORDER BY productid ASC;
-            """, (filtro,))
+            cur.execute("SELECT * FROM fn_buscar_productos(%s);", (filtro,))
 
             for fila in cur.fetchall():
                 estado_txt = "Descontinuado" if fila[9] else "Activo"
                 valores = (
                     fila[0], fila[1], fila[2], fila[3], fila[4],
                     f"{fila[5]:.2f}" if fila[5] is not None else "0.00",
-                    fila[6], fila[7], fila[8], estado_txt
+                    fila[6], fila[7], fila[8], estado_txt, fila[10], fila[11]
                 )
                 self.tree.insert("", "end", values=valores)
 
@@ -261,8 +256,8 @@ class AppNorthwindProductos:
             ("Cantidad por Unidad:", "unidad"),
             ("Precio Unitario ($):", "precio"),
             ("Unidades en Stock:", "stock"),
-            ("Unidades en Orden:", "orden"),
-            ("Nivel de Reorden:", "reorden")
+            ("Unidades Encargadas:", "orden"),
+            ("Reabastecimiento", "reorden")
         ]
 
         entradas = {}
@@ -284,8 +279,8 @@ class AppNorthwindProductos:
             entradas["id"].insert(0, datos[0])
             entradas["id"].config(state="disabled")
             entradas["nombre"].insert(0, datos[1])
-            entradas["prov"].insert(0, "" if datos[2] == "None" else datos[2])
-            entradas["cat"].insert(0, "" if datos[3] == "None" else datos[3])
+            entradas["prov"].insert(0, "" if datos[10] == "None" else datos[10])
+            entradas["cat"].insert(0, "" if datos[11] == "None" else datos[11])
             entradas["unidad"].insert(0, "" if datos[4] == "None" else datos[4])
             entradas["precio"].insert(0, datos[5])
             entradas["stock"].insert(0, datos[6])

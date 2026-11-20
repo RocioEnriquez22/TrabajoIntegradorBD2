@@ -155,7 +155,46 @@ SELECT fn_abm_producto('M', 80, 'Yerba Mate Seleccionada', 1, 1, 'Bolsa 1kg', 13
 SELECT fn_abm_producto('B', 80, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 
-
+//Funcion para traer y buscar productos.
+CREATE OR REPLACE FUNCTION public.fn_buscar_productos(p_filtro varchar DEFAULT '')
+RETURNS TABLE (
+    productid int4,
+    productname varchar,
+    companyname varchar,
+    categoryname varchar,
+    quantityperunit varchar,
+    unitprice numeric,
+    unitsinstock int4,
+    unitsonorder int4,
+    reorderlevel int4,
+    discontinued bool,
+    supplierid int4,
+    categoryid int4
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.productid,
+        p.productname,
+        s.companyname,
+        c.categoryname,
+        p.quantityperunit,
+        p.unitprice,
+        p.unitsinstock,
+        p.unitsonorder,
+        p.reorderlevel,
+        p.discontinued,
+        supplierid,
+        categoryid
+    FROM public.products p
+    INNER JOIN public.suppliers s ON p.supplierid = s.supplierid
+    INNER JOIN public.categories c ON p.categoryid = c.categoryid
+    WHERE p.productname ILIKE '%' || COALESCE(p_filtro, '') || '%'
+    ORDER BY p.productid ASC;
+END;
+$$;
 
 
 
