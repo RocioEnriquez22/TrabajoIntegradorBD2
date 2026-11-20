@@ -4,11 +4,12 @@ from tkinter import messagebox, ttk
 import psycopg2
 
 DB_CONFIG = {
-    "dbname": "northwind", #nuestra bd
+    "dbname": "northwind_2", #nuestra bd
     "user": "postgres",
-    "password": "1234",  # ponemos nuestra contraseña si tenemos
+    "password": "postgres",  # ponemos nuestra contraseña si tenemos
     "host": "127.0.0.1",
     "port": "5432",
+    "client_encoding":"utf8"
 }
 
 def obtener_conexion():
@@ -66,7 +67,7 @@ class AppNorthwindProductos:
         barraBusqueda.pack(fill="x", pady=(0, 12))
 
         self.var_buscar = tk.StringVar()
-        entry_buscar = tk.Entry(barraBusqueda, textvariable=self.var_buscar, font=("Great Vibes", 10), width=35)
+        entry_buscar = tk.Entry(barraBusqueda, textvariable=self.var_buscar, font=("Great Vibes", 10), width=35,placeholder="Buscar por nombre de producto")
         entry_buscar.pack(side="left", ipady=4, padx=(0, 8))
         entry_buscar.bind("<Return>", lambda e: self.cargar_productos())
 
@@ -80,7 +81,7 @@ class AppNorthwindProductos:
             relief="flat", padx=10, pady=5, cursor="hand2", command=self.limpiar_busqueda
         ).pack(side="left")
 
-        # Botones ABM a la derecha
+        # Botones ABM 
         abm_botones = tk.Frame(main_area,bg="#bfbfbf",pady=5)
         abm_botones.pack(fill="x", pady=(0, 10))
         
@@ -89,17 +90,17 @@ class AppNorthwindProductos:
 
 
         tk.Button(
-            contenedor_centro, text="+ Nuevo Producto", bg="#2db15d", fg="white", font=("Great Vibes", 9, "bold"),
+            contenedor_centro, text="+ Nuevo Producto", bg="#27416B", fg="white", font=("Great Vibes", 9, "bold"),
             relief="flat", padx=14, pady=5, cursor="hand2", command=lambda: self.abrir_formulario("A")
         ).pack(side="left", padx=(0,12))
 
         tk.Button(
-            contenedor_centro, text="Editar Seleccionado", bg="#d97706", fg="white", font=("Great Vibes", 9, "bold"),
+            contenedor_centro, text="Editar Seleccionado", bg="#27416B", fg="white", font=("Great Vibes", 9, "bold"),
             relief="flat", padx=14, pady=5, cursor="hand2", command=self.preparar_edicion
         ).pack(side="left", padx=(0, 8))
 
         tk.Button(
-            contenedor_centro, text="Eliminar Seleccionado", bg="#dc2626", fg="white", font=("Great Vibes", 9, "bold"),
+            contenedor_centro, text="Eliminar Seleccionado", bg="#27416B", fg="white", font=("Great Vibes", 9, "bold"),
             relief="flat", padx=14, pady=5, cursor="hand2", command=self.eliminar_producto
         ).pack(side="left")
 

@@ -155,7 +155,7 @@ SELECT fn_abm_producto('M', 80, 'Yerba Mate Seleccionada', 1, 1, 'Bolsa 1kg', 13
 SELECT fn_abm_producto('B', 80, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 
-//Funcion para traer y buscar productos.
+-- Funcion para traer y buscar productos.
 CREATE OR REPLACE FUNCTION public.fn_buscar_productos(p_filtro varchar DEFAULT '')
 RETURNS TABLE (
     productid int4,
@@ -186,8 +186,8 @@ BEGIN
         p.unitsonorder,
         p.reorderlevel,
         p.discontinued,
-        supplierid,
-        categoryid
+        s.supplierid,
+        c.categoryid
     FROM public.products p
     INNER JOIN public.suppliers s ON p.supplierid = s.supplierid
     INNER JOIN public.categories c ON p.categoryid = c.categoryid
