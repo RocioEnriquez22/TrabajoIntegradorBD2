@@ -30,7 +30,7 @@ class PantallaConsultaVentas(tk.Toplevel):
 
         tk.Label(filtros_bar, text="Empleado:", bg="#bfbfbf", fg="#0f172a", font=("Great Vibes", 10, "bold")).pack(side="left", padx=(0, 6))
         self.var_filtro_emp = tk.StringVar()
-        ent_emp = tk.Entry(filtros_bar, textvariable=self.var_filtro_emp, font=("Great Vibes", 10), width=25,placeholder="Ingrese nombre del cliente")
+        ent_emp = tk.Entry(filtros_bar, textvariable=self.var_filtro_emp, font=("Great Vibes", 10), width=25,placeholder="Ingrese nombre del empleado")
         ent_emp.pack(side="left", ipady=4, padx=(0, 15))
         ent_emp.bind("<Return>", lambda e: self.cargar_consulta_ventas())
 
@@ -98,14 +98,9 @@ class PantallaConsultaVentas(tk.Toplevel):
             con = obtener_conexion()
             cur = con.cursor()
 
-            query = """
-                SELECT id_orden, fecha_orden, id_empleado, empleado, cargo,
-                       cliente, pais_destino, cant_items, total_orden
-                FROM vw_ventas_empleados
-                WHERE empleado ILIKE %s AND pais_destino ILIKE %s
-                ORDER BY fecha_orden DESC, id_orden DESC;
-            """
-            cur.execute(query, (filtro_emp, filtro_pais))
+            cur.execute("SELECT * FROM fn_buscar_ventas_empleados(%s, %s);",
+            (filtro_emp, filtro_pais)
+)
 
             for fila in cur.fetchall():
                 valores = (

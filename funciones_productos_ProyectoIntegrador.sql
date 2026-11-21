@@ -4,12 +4,12 @@ CREATE OR REPLACE FUNCTION fn_abm_producto (
     p_productname varchar(40),   -- Nombre del producto
     p_supplierid integer,        -- ID del proveedor
     p_categoryid integer,        -- ID de la categoría
-    p_quantityperunit varchar,   -- Cantidad por unidad (ej: '10 boxes x 20 bags')
+    p_quantityperunit varchar,   -- Cantidad por unidad
     p_unitprice numeric,         -- Precio unitario
     p_unitsinstock integer,      -- Stock actual
     p_unitsonorder integer,      -- Unidades encargadas
     p_reorderlevel integer,      -- Nivel de reorden
-    p_discontinued boolean       -- 0: Activo, 1: Descontinuado (o boolean según tu esquema)
+    p_discontinued boolean       -- 0: Activo, 1: Descontinuado
 )
 RETURNS text AS $$
 DECLARE
@@ -99,6 +99,14 @@ BEGIN
             RAISE EXCEPTION 'El stock en existencia no puede ser negativo.';
         END IF;
 
+        IF p_unitsonorder < 0 THEN
+			RAISE EXCEPTION 'No puede encargar menos de 0 unidades.';
+		END IF;
+
+		IF p_reorderlevel < 0 THEN
+			RAISE EXCEPTION 'La cantidad para el reabastecimiento no debe ser menor a 0.';
+		END IF;
+
         -- Ejecutar la Modificación
         UPDATE products 
         SET productname     = trim(p_productname),
@@ -177,9 +185,9 @@ BEGIN
     RETURN QUERY
     SELECT 
         p.productid,
-        p.productname,
-        s.companyname,
-        c.categoryname,
+        trim(p.productname)::varchar, --Hacemos casteo a varchar porque trim devuelve text y no coincide con el tipo de dato varchar de RETURNS TABLE
+        trim(s.companyname)::varchar,
+        trim(c.categoryname)::varchar,
         p.quantityperunit,
         p.unitprice,
         p.unitsinstock,

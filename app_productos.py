@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
+
 import psycopg2
+
 from conexion import obtener_conexion
 from view_consulta import PantallaConsultaVentas
 
@@ -101,6 +103,14 @@ class AppNorthwindProductos:
             barraBusqueda, text="Limpiar", bg="#64748b", fg="white", font=("Great Vibes", 9, "bold"),
             relief="flat", padx=10, pady=5, cursor="hand2", command=self.limpiar_busqueda
         ).pack(side="left")
+        #Helper text de la barra de busqueda
+        tk.Label(
+            main_area,
+            text="La búsqueda muestra los productos que contienen el texto ingresado.",
+            bg="#bfbfbf",
+            fg="#334155",
+            font=("Segoe UI", 8)
+        ).pack(anchor="w", pady=(0, 12))
 
         # Botones ABM
         abm_botones = tk.Frame(main_area, bg="#bfbfbf", pady=5)
