@@ -1,19 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
-
 import psycopg2
+from conexion import obtener_conexion
+from view_consulta import PantallaConsultaVentas
 
-DB_CONFIG = {
-    "dbname": "northwind_2", #nuestra bd
-    "user": "postgres",
-    "password": "postgres",  # ponemos nuestra contraseña si tenemos
-    "host": "127.0.0.1",
-    "port": "5432",
-    "client_encoding":"utf8"
-}
-
-def obtener_conexion():
-    return psycopg2.connect(**DB_CONFIG)
 
 # CLASE PRINCIPAL DE LA APLICACION 
 class AppNorthwindProductos:
@@ -23,33 +13,64 @@ class AppNorthwindProductos:
         self.root.geometry("1280x720")
         self.root.configure(bg="#bfbfbf")
 
-        self.construir_interfaz()
+        self.ventana_consulta=None
+
+        self.construir_navbar()
+        self.construir_vista_abm()
         self.cargar_productos()
 
-    def construir_interfaz(self):
-        # --- barra nav ---
+    def construir_navbar(self):
         navbar = tk.Frame(self.root, bg="#27416B", height=75)
         navbar.pack(side="top", fill="x")
         navbar.pack_propagate(False)
 
         tk.Label(
-            navbar, text="ABM - PRODUCTOS", fg="white", bg="#27416B",
+            navbar, text="NORTHWIND", fg="white", bg="#27416B",
             font=("Great Vibes", 16, "bold")
-        ).pack(pady=(25, 2), padx=20, anchor="w")
+        ).pack(side="left", padx=(25, 10))
 
         tk.Label(
-            navbar, text="GESTIÓN DE PRODUCTOS", fg="#94a3b8", bg="#27416B",
+            navbar, text="SISTEMA DE GESTIÓN", fg="#94a3b8", bg="#27416B",
             font=("Great Vibes", 10, "bold")
-        ).pack(side="left", padx=25)
+        ).pack(side="left", padx=10)
+
+        tk.Button(
+            navbar, text="📊  Consulta Ventas (View)", fg="white", bg="#1e3356",
+            activebackground="#3b5998", activeforeground="white",
+            font=("Great Vibes", 10, "bold"), relief="flat", padx=16, pady=8,
+            cursor="hand2", command=self.abrir_consulta_ventas
+        ).pack(side="right", padx=(8, 25))
 
         tk.Label(
-            navbar, text="▶  Productos (ABM)", fg="white" ,bg="#27416B",
-            font=("Great Vibes", 10, "bold"), pady=10, padx=20, anchor="w"
-        ).pack(side="right", padx=25)
+            navbar, text="▶  Productos (ABM)", fg="white", bg="#3b5998",
+            font=("Great Vibes", 10, "bold"), padx=16, pady=8
+        ).pack(side="right", padx=8)
 
-        # --- ÁREA PRINCIPAL DERECHA ---
-        main_area = tk.Frame(self.root,bg= "#bfbfbf")
-        main_area.pack(side="top", fill="both", expand=True, padx=25, pady=18)
+    def mostrar_vista(self, vista):
+        self.frame_abm.pack_forget()
+        self.frame_consulta.pack_forget()
+
+        if vista == "ABM":
+            self.frame_abm.pack(fill="both", expand=True)
+            self.btn_nav_abm.config(bg="#3b5998", text="Productos (ABM)")
+            self.btn_nav_consulta.config(bg="#1e3356", text="Consulta Ventas (View)")
+        else:
+            self.frame_consulta.pack(fill="both", expand=True)
+            self.btn_nav_consulta.config(bg="#3b5998", text="Consulta Ventas (View)")
+            self.btn_nav_abm.config(bg="#1e3356", text="Productos (ABM)")
+            self.frame_consulta.cargar_consulta_ventas()
+
+    def abrir_consulta_ventas(self):
+        if self.ventana_consulta is not None and self.ventana_consulta.winfo_exists():
+            self.ventana_consulta.lift()
+            self.ventana_consulta.focus_force()
+        else:
+            self.ventana_consulta=PantallaConsultaVentas(self.root)
+
+    def construir_vista_abm(self):
+        # --- ÁREA PRINCIPAL (DENTRO DE self.frame_abm PARA QUE ALTERNE CON LA VISTA) ---
+        main_area = tk.Frame(self.root, bg="#bfbfbf")
+        main_area.pack(fill="both", expand=True, padx=25, pady=18)
 
         # Encabezado
         tk.Label(
@@ -59,7 +80,7 @@ class AppNorthwindProductos:
 
         tk.Label(
             main_area, text="Consulta, registra, modifica y da de baja productos.",
-            fg="#36485f",bg= "#bfbfbf", font=("Great Vibes", 10)
+            fg="#36485f", bg="#bfbfbf", font=("Great Vibes", 10)
         ).pack(anchor="w", pady=(2, 15))
 
         # --- BARRA DE BÚSQUEDA Y BOTONES DE ACCIÓN ---
@@ -67,7 +88,7 @@ class AppNorthwindProductos:
         barraBusqueda.pack(fill="x", pady=(0, 12))
 
         self.var_buscar = tk.StringVar()
-        entry_buscar = tk.Entry(barraBusqueda, textvariable=self.var_buscar, font=("Great Vibes", 10), width=35,placeholder="Buscar por nombre de producto")
+        entry_buscar = tk.Entry(barraBusqueda, textvariable=self.var_buscar, font=("Great Vibes", 10), width=35,placeholder="Ingrese nombre del producto")
         entry_buscar.pack(side="left", ipady=4, padx=(0, 8))
         entry_buscar.bind("<Return>", lambda e: self.cargar_productos())
 
@@ -81,18 +102,17 @@ class AppNorthwindProductos:
             relief="flat", padx=10, pady=5, cursor="hand2", command=self.limpiar_busqueda
         ).pack(side="left")
 
-        # Botones ABM 
-        abm_botones = tk.Frame(main_area,bg="#bfbfbf",pady=5)
+        # Botones ABM
+        abm_botones = tk.Frame(main_area, bg="#bfbfbf", pady=5)
         abm_botones.pack(fill="x", pady=(0, 10))
         
         contenedor_centro = tk.Frame(abm_botones, bg="#bfbfbf")
-        contenedor_centro.pack(anchor="center",pady=(15, 5))
-
+        contenedor_centro.pack(anchor="center", pady=(15, 5))
 
         tk.Button(
             contenedor_centro, text="+ Nuevo Producto", bg="#27416B", fg="white", font=("Great Vibes", 9, "bold"),
             relief="flat", padx=14, pady=5, cursor="hand2", command=lambda: self.abrir_formulario("A")
-        ).pack(side="left", padx=(0,12))
+        ).pack(side="left", padx=(0, 12))
 
         tk.Button(
             contenedor_centro, text="Editar Seleccionado", bg="#27416B", fg="white", font=("Great Vibes", 9, "bold"),
@@ -109,19 +129,19 @@ class AppNorthwindProductos:
         frame_tabla.pack(fill="both", expand=True)
 
         columnas = ("id", "nombre", "proveedor", "categoria", "unidad", "precio", "stock", "orden", "reorden", "estado", "id_proveedor", "id_categoria")
-        columnas_visibles= ("id", "nombre", "proveedor", "categoria", "unidad", "precio", "stock", "orden", "reorden", "estado")
+        columnas_visibles = ("id", "nombre", "proveedor", "categoria", "unidad", "precio", "stock", "orden", "reorden", "estado")
         self.tree = ttk.Treeview(frame_tabla, columns=columnas, show="headings", selectmode="browse", displaycolumns=columnas_visibles)
 
         encabezados = {
             "id": ("ID", 50),
             "nombre": ("Producto", 210),
-            "proveedor": ("ID Proveedor", 65),
-            "categoria": ("ID Categoria", 65),
+            "proveedor": ("Proveedor", 120),
+            "categoria": ("Categoría", 110),
             "unidad": ("Presentación", 135),
             "precio": ("Precio ($)", 80),
             "stock": ("Stock", 60),
-            "orden": ("Unidades encargadas", 65),
-            "reorden": ("Reabastecimiento", 65),
+            "orden": ("Unidades encargadas", 110),
+            "reorden": ("Reabastecimiento", 105),
             "estado": ("Estado", 95)
         }
 
@@ -134,6 +154,7 @@ class AppNorthwindProductos:
 
         self.tree.pack(side="left", fill="both", expand=True)
         scroll_y.pack(side="right", fill="y")
+    
 
     # ==========================================================================
     # 3. MÉTODOS DE CONSULTA Y LLAMADA A LA FUNCIÓN ABM EN POSTGRESQL
